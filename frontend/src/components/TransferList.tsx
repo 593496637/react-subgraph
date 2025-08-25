@@ -1,80 +1,135 @@
 import { useQuery } from "@apollo/client/react";
-import { GET_TRANSFERS } from "../queries"; // 导入我们在第四步创建的查询
+import { GET_TRANSFERS } from "../queries";
 import { ethers } from "ethers";
+import { parseHexMessage } from "../utils/hexUtils";
 
-// 为单条 transfer 数据定义 TypeScript 类型，可以获得更好的代码提示
+/**
+ * Transfer实体的TypeScript接口定义
+ * 对应subgraph中的Transfer实体类型
+ */
 interface Transfer {
-  id: string;
-  src: string;
-  dst: string;
-  wad: string; // The Graph 返回的 BigInt 类型通常在 JS/TS 中作为字符串处理
-  blockTimestamp: string;
-  transactionHash: string;
-  inputData: string;
+  id: string;                  // 唯一标识符 (交易哈希 + 日志索引)
+  from: string;                // 发送方地址 (0x0表示代币铸造)
+  to: string;                  // 接收方地址 (0x0表示代币销毁)
+  amount: string;              // 转账金额，The Graph返回BigInt作为字符串
+  blockTimestamp: string;      // 区块时间戳
+  transactionHash: string;     // 交易哈希
+  inputData: string;           // 交易附言数据
 }
 
+/**
+ * WETH转账列表组件
+ * 
+ * 显示最新的WETH代币转账事件，包括：
+ * - 普通用户间转账
+ * - 存入ETH时的代币铸造 (from: 0x0)
+ * - 提取ETH时的代币销毁 (to: 0x0)
+ */
 export const TransferList = () => {
-  // useQuery 是 Apollo Client 提供的核心 Hook。
-  // 它会自动处理数据获取、加载状态和错误状态。
-  const { loading, error, data } = useQuery<{ transfers: Transfer[] }>(GET_TRANSFERS);
+  // 使用Apollo Client的useQuery Hook获取转账数据
+  // 自动处理加载状态、错误状态和数据缓存
+  const { loading, error, data, refetch } = useQuery<{ transfers: Transfer[] }>(GET_TRANSFERS);
 
-  // 1. 当数据正在加载时，显示提示信息
-  if (loading) return <p>Loading transfers...</p>;
+  // 刷新数据函数
+  const handleRefresh = () => {
+    refetch();
+  };
 
-  // 2. 如果获取数据时发生错误，显示错误信息
-  if (error) return <p>Error fetching transfers: {error.message}</p>;
+  // 仅在初次加载且无数据时显示加载状态
+  if (loading && !data?.transfers?.length) {
+    return <div className="loading">正在加载转账数据...</div>;
+  }
 
-  // 3. 成功获取数据后，渲染数据表格
+  // 错误状态显示
+  if (error) return <div className="error">加载转账数据失败: {error.message}</div>;
+
+  // 渲染转账数据表格
   return (
-    <div>
-      <h1>Recent WETH Transfers (Sepolia)</h1>
-      <table>
+    <div className={`data-section ${loading ? 'refreshing' : ''}`}>
+      <div className="section-header">
+        <h2 className="section-title">
+          <span className="section-icon">🔄</span>
+          最新转账记录
+        </h2>
+        <button 
+          className="refresh-button" 
+          onClick={handleRefresh}
+          disabled={loading}
+        >
+          <span className="refresh-icon">{loading ? '⏳' : '🔄'}</span>
+          {loading ? '刷新中...' : '刷新'}
+        </button>
+      </div>
+      <div className="table-container">
+        <table className="transfers-table">
         <thead>
           <tr>
-            <th>From</th>
-            <th>To</th>
-            <th>Amount (WETH)</th>
-            <th>Date</th>
-            <th>Transaction</th>
+            <th>发送方</th>
+            <th>接收方</th>
+            <th>金额 (WETH)</th>
+            <th>时间</th>
+            <th>附言</th>
+            <th>交易详情</th>
           </tr>
         </thead>
         <tbody>
-          {/* 使用 map 函数遍历 data.transfers 数组来渲染每一行 */}
+          {/* 遍历转账数据数组，为每个转账事件渲染一行 */}
           {data?.transfers.map((transfer: Transfer) => (
             <tr key={transfer.id}>
-              {/* 地址缩短显示，鼠标悬浮时显示完整地址 */}
-              <td title={transfer.src}>
-                {`${transfer.src.substring(0, 6)}...${transfer.src.substring(transfer.src.length - 4)}`}
-              </td>
-              <td title={transfer.dst}>
-                {`${transfer.dst.substring(0, 6)}...${transfer.dst.substring(transfer.dst.length - 4)}`}
-              </td>
-              {/* WETH 有 18 位小数，使用 ethers.js 来格式化金额 */}
+              {/* 发送方地址 - 缩短显示，hover显示完整地址 */}
               <td>
-                {parseFloat(ethers.formatUnits(transfer.wad, 18)).toFixed(4)}
+                <span 
+                  className="address" 
+                  title={transfer.from}
+                >
+                  {transfer.from === '0x0000000000000000000000000000000000000000' 
+                    ? '🏭 铸造' 
+                    : `${transfer.from.substring(0, 6)}...${transfer.from.substring(transfer.from.length - 4)}`}
+                </span>
               </td>
-              {/* 时间戳是秒为单位的字符串，需要转换成日期对象来格式化 */}
+              {/* 接收方地址 - 缩短显示，hover显示完整地址 */}
               <td>
-                {new Date(parseInt(transfer.blockTimestamp) * 1000).toLocaleString()}
+                <span 
+                  className="address" 
+                  title={transfer.to}
+                >
+                  {transfer.to === '0x0000000000000000000000000000000000000000' 
+                    ? '🔥 销毁' 
+                    : `${transfer.to.substring(0, 6)}...${transfer.to.substring(transfer.to.length - 4)}`}
+                </span>
               </td>
-              <td title={transfer.inputData}>
-                {/* 使用 <code> 标签更适合显示十六进制数据 */}
-                <code>{`${transfer.inputData?.substring(0, 10)}...`}</code>
+              {/* 转账金额 - 从wei转换为WETH单位 (18位小数) */}
+              <td className="amount">
+                {parseFloat(ethers.formatUnits(transfer.amount, 18)).toFixed(4)} WETH
               </td>
-              {/* 提供一个链接到 Sepolia Etherscan 查看交易详情 */}
+              {/* 交易时间 - 将时间戳转换为本地时间格式 */}
+              <td className="timestamp">
+                {new Date(parseInt(transfer.blockTimestamp) * 1000).toLocaleDateString('zh-CN')} 
+                <br />
+                {new Date(parseInt(transfer.blockTimestamp) * 1000).toLocaleTimeString('zh-CN')}
+              </td>
+              {/* 交易附言 - 解析十六进制为可读文本 */}
+              <td>
+                <span className="message" title={transfer.inputData}>
+                  {parseHexMessage(transfer.inputData)}
+                </span>
+              </td>
+              {/* Etherscan链接 - 查看完整交易详情 */}
               <td>
                 <a 
+                  className="etherscan-link"
                   href={`https://sepolia.etherscan.io/tx/${transfer.transactionHash}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >
-                  View
+                  📋 查看
                 </a>
               </td>
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 };

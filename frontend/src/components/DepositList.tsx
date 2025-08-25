@@ -1,64 +1,123 @@
-// src/components/DepositList.tsx
-
 import { useQuery } from "@apollo/client/react";
-import { GET_DEPOSITS } from "../queries"; // 导入我们新的查询
+import { GET_DEPOSITS } from "../queries";
 import { ethers } from "ethers";
+import { parseHexMessage } from "../utils/hexUtils";
 
+/**
+ * Deposit实体的TypeScript接口定义
+ * 对应subgraph中的Deposit实体类型
+ */
 interface Deposit {
-  id: string;
-  dst: string;
-  wad: string;
-  blockTimestamp: string;
-  transactionHash: string;
+  id: string;                  // 唯一标识符 (交易哈希 + 日志索引)
+  user: string;                // 接收WETH代币的用户地址
+  amount: string;              // 存入的ETH数量，从The Graph作为字符串返回
+  blockTimestamp: string;      // 区块时间戳
+  transactionHash: string;     // 交易哈希
+  inputData: string;           // 交易附言数据
 }
 
+/**
+ * GraphQL查询返回数据的TypeScript接口定义
+ */
 interface GetDepositsData {
-  deposits: Deposit[]; // 我们期望 data 对象里有一个 deposits 属性，它是一个 Deposit 对象的数组
+  deposits: Deposit[];         // deposits字段包含Deposit对象数组
 }
 
+/**
+ * WETH存入列表组件
+ * 
+ * 显示最新的ETH存入WETH合约事件
+ * 用户向WETH合约发送ETH后会获得等量WETH代币
+ */
 export const DepositList = () => {
-  const { loading, error, data } = useQuery<GetDepositsData>(GET_DEPOSITS);
+  // 使用Apollo Client的useQuery Hook获取存入数据
+  const { loading, error, data, refetch } = useQuery<GetDepositsData>(GET_DEPOSITS);
 
-  if (loading) return <p>Loading deposits...</p>;
-  if (error) return <p>Error fetching deposits: {error.message}</p>;
+  // 刷新数据函数
+  const handleRefresh = () => {
+    refetch();
+  };
+
+  // 仅在初次加载且无数据时显示加载状态
+  if (loading && !data?.deposits?.length) {
+    return <div className="loading">正在加载存入数据...</div>;
+  }
+
+  // 错误状态显示
+  if (error) return <div className="error">加载存入数据失败: {error.message}</div>;
 
   return (
-    <div style={{ marginTop: '4rem' }}>
-      <h1>Recent WETH Deposits (Sepolia)</h1>
-      <table>
+    <div className={`data-section ${loading ? 'refreshing' : ''}`}>
+      <div className="section-header">
+        <h2 className="section-title">
+          <span className="section-icon">💰</span>
+          最新存入记录
+        </h2>
+        <button 
+          className="refresh-button" 
+          onClick={handleRefresh}
+          disabled={loading}
+        >
+          <span className="refresh-icon">{loading ? '⏳' : '🔄'}</span>
+          {loading ? '刷新中...' : '刷新'}
+        </button>
+      </div>
+      <div className="table-container">
+        <table className="deposits-table">
         <thead>
           <tr>
-            <th>To</th>
-            <th>Amount (WETH)</th>
-            <th>Date</th>
-            <th>Transaction</th>
+            <th>接收方</th>
+            <th>金额 (WETH)</th>
+            <th>时间</th>
+            <th>附言</th>
+            <th>交易详情</th>
           </tr>
         </thead>
         <tbody>
+          {/* 遍历存入数据数组，为每个存入事件渲染一行 */}
           {data?.deposits?.map((deposit: Deposit) => (
             <tr key={deposit.id}>
-              <td title={deposit.dst}>
-                {`${deposit.dst.substring(0, 6)}...${deposit.dst.substring(deposit.dst.length - 4)}`}
-              </td>
+              {/* 接收WETH的地址 - 缩短显示，hover显示完整地址 */}
               <td>
-                {parseFloat(ethers.formatUnits(deposit.wad, 18)).toFixed(4)}
+                <span 
+                  className="address" 
+                  title={deposit.user}
+                >
+                  {`${deposit.user.substring(0, 6)}...${deposit.user.substring(deposit.user.length - 4)}`}
+                </span>
               </td>
+              {/* 存入金额 - 从wei转换为ETH单位 (18位小数) */}
+              <td className="amount">
+                {parseFloat(ethers.formatUnits(deposit.amount, 18)).toFixed(4)} ETH
+              </td>
+              {/* 存入时间 - 将时间戳转换为本地时间格式 */}
+              <td className="timestamp">
+                {new Date(parseInt(deposit.blockTimestamp) * 1000).toLocaleDateString('zh-CN')} 
+                <br />
+                {new Date(parseInt(deposit.blockTimestamp) * 1000).toLocaleTimeString('zh-CN')}
+              </td>
+              {/* 交易附言 - 解析十六进制为可读文本 */}
               <td>
-                {new Date(parseInt(deposit.blockTimestamp) * 1000).toLocaleString()}
+                <span className="message" title={deposit.inputData}>
+                  {parseHexMessage(deposit.inputData)}
+                </span>
               </td>
+              {/* Etherscan链接 - 查看完整交易详情 */}
               <td>
                 <a 
+                  className="etherscan-link"
                   href={`https://sepolia.etherscan.io/tx/${deposit.transactionHash}`} 
                   target="_blank" 
                   rel="noopener noreferrer"
                 >
-                  View
+                  📋 查看
                 </a>
               </td>
             </tr>
           ))}
         </tbody>
-      </table>
+        </table>
+      </div>
     </div>
   );
 };

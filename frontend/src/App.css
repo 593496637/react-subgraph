@@ -1,72 +1,516 @@
 /* 全局和根元素样式 */
 #root {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
-}
-
-body {
+  width: 100%;
+  min-width: 320px;
   margin: 0;
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  background-color: #1a1a1a;
-  color: rgba(255, 255, 255, 0.87);
+  padding: 1rem;
+  background: linear-gradient(135deg, #1e1e2e 0%, #2a2a3a 100%);
+  min-height: 100vh;
 }
 
-/* 标题样式 */
-h1 {
-  font-size: 2.5em;
-  line-height: 1.1;
+/* 主容器样式 */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  max-width: 1600px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 页面头部样式 */
+.page-header {
+  text-align: center;
   margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 3em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #64b5f6 0%, #42a5f5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.2em;
+  margin: 0;
+}
+
+/* 卡片容器样式 */
+.data-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  padding: 2rem;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.data-section:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* 节标题和头部样式 */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.section-title {
+  font-size: 2em;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* 刷新按钮样式 */
+.refresh-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9em;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(66, 165, 245, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.refresh-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(66, 165, 245, 0.4);
+}
+
+.refresh-button:disabled {
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 刷新时的脉冲效果 */
+.refresh-button:disabled::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { left: -100%; }
+  100% { left: 100%; }
+}
+
+.refresh-icon {
+  font-size: 1.1em;
+  animation: rotate 2s linear infinite;
+  animation-play-state: paused;
+}
+
+.refresh-button:disabled .refresh-icon {
+  animation-play-state: running;
+}
+
+@keyframes rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.section-icon {
+  font-size: 1.2em;
+}
+
+/* 表格容器样式 */
+.table-container {
+  overflow-x: auto;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.2);
 }
 
 /* 表格样式 */
 table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9em;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+  font-size: 0.95em;
+  background: transparent;
+  table-layout: fixed; /* 固定表格布局，防止列宽随内容变化 */
 }
 
 /* 表头样式 */
 thead tr {
-  background-color: #009879;
+  background: linear-gradient(135deg, #42a5f5 0%, #1976d2 100%);
   color: #ffffff;
-  text-align: left;
 }
 
-/* 表格单元格和表头单元格样式 */
-th, td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #444;
+th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.8em;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* 转账表格列宽设置 */
+.transfers-table th:nth-child(1), /* 发送方 */
+.transfers-table td:nth-child(1) {
+  width: 15%;
+}
+
+.transfers-table th:nth-child(2), /* 接收方 */
+.transfers-table td:nth-child(2) {
+  width: 15%;
+}
+
+.transfers-table th:nth-child(3), /* 金额 */
+.transfers-table td:nth-child(3) {
+  width: 15%;
+}
+
+.transfers-table th:nth-child(4), /* 时间 */
+.transfers-table td:nth-child(4) {
+  width: 20%;
+}
+
+.transfers-table th:nth-child(5), /* 附言 */
+.transfers-table td:nth-child(5) {
+  width: 25%;
+}
+
+.transfers-table th:nth-child(6), /* 交易详情 */
+.transfers-table td:nth-child(6) {
+  width: 10%;
+}
+
+/* 存入表格列宽设置 */
+.deposits-table th:nth-child(1), /* 接收方 */
+.deposits-table td:nth-child(1) {
+  width: 20%;
+}
+
+.deposits-table th:nth-child(2), /* 金额 */
+.deposits-table td:nth-child(2) {
+  width: 20%;
+}
+
+.deposits-table th:nth-child(3), /* 时间 */
+.deposits-table td:nth-child(3) {
+  width: 25%;
+}
+
+.deposits-table th:nth-child(4), /* 附言 */
+.deposits-table td:nth-child(4) {
+  width: 25%;
+}
+
+.deposits-table th:nth-child(5), /* 交易详情 */
+.deposits-table td:nth-child(5) {
+  width: 10%;
+}
+
+/* 表格单元格样式 */
+td {
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
 }
 
 /* 表格主体行样式 */
 tbody tr {
-  border-bottom: 1px solid #dddddd;
+  transition: background-color 0.2s ease, opacity 0.3s ease;
 }
 
-/* 斑马条纹（奇数行）样式 */
 tbody tr:nth-of-type(even) {
-  background-color: #2f2f2f;
+  background-color: rgba(255, 255, 255, 0.02);
 }
 
-/* 鼠标悬浮在行上时的样式 */
 tbody tr:hover {
-  background-color: #3a3a3a;
+  background-color: rgba(66, 165, 245, 0.1);
+  transform: scale(1.001);
+}
+
+/* 刷新时表格的视觉提示 */
+.data-section.refreshing tbody tr {
+  opacity: 0.7;
+}
+
+.data-section.refreshing .table-container::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #42a5f5, #1976d2);
+  animation: loading-bar 1.5s infinite;
+}
+
+@keyframes loading-bar {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.table-container {
+  position: relative;
+}
+
+/* 地址显示样式 */
+.address {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.9em;
+  color: #90caf9;
   cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.address:hover {
+  color: #64b5f6;
+}
+
+/* 金额显示样式 */
+.amount {
+  font-weight: 600;
+  color: #81c784;
+  font-size: 1.1em;
+}
+
+/* 时间显示样式 */
+.timestamp {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.9em;
+}
+
+/* 交易哈希样式 */
+.tx-hash {
+  font-family: 'Monaco', 'Menlo', monospace;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* 附言消息样式 */
+.message {
+  color: #ffb74d;
+  font-weight: 500;
+  width: 100%;
+  display: inline-block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: help;
+  transition: color 0.2s ease;
+}
+
+.message:hover {
+  color: #ffa726;
 }
 
 /* 链接样式 */
-a {
-  color: #00bfff;
+.etherscan-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #42a5f5;
   text-decoration: none;
-  transition: color 0.2s ease-in-out;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  background: rgba(66, 165, 245, 0.1);
+  border: 1px solid rgba(66, 165, 245, 0.3);
+  transition: all 0.2s ease;
+  font-size: 0.9em;
+  font-weight: 500;
 }
 
-a:hover {
-  color: #009acd;
-  text-decoration: underline;
+.etherscan-link:hover {
+  background: rgba(66, 165, 245, 0.2);
+  border-color: rgba(66, 165, 245, 0.5);
+  transform: translateY(-1px);
+  text-decoration: none;
+}
+
+/* 加载和错误状态样式 */
+.loading, .error {
+  text-align: center;
+  padding: 2rem;
+  border-radius: 12px;
+  margin: 2rem 0;
+}
+
+.loading {
+  background: rgba(66, 165, 245, 0.1);
+  color: #64b5f6;
+  border: 1px solid rgba(66, 165, 245, 0.3);
+}
+
+.error {
+  background: rgba(244, 67, 54, 0.1);
+  color: #ef5350;
+  border: 1px solid rgba(244, 67, 54, 0.3);
+}
+
+/* 响应式设计 */
+@media (max-width: 1200px) {
+  #root {
+    padding: 0.75rem;
+  }
+  
+  .page-title {
+    font-size: 2.5em;
+  }
+  
+  .data-section {
+    padding: 1.5rem;
+  }
+  
+  /* 调整较小屏幕的列宽 */
+  .transfers-table th:nth-child(4),
+  .transfers-table td:nth-child(4) {
+    width: 18%;
+  }
+  
+  .transfers-table th:nth-child(5),
+  .transfers-table td:nth-child(5) {
+    width: 27%;
+  }
+}
+
+@media (max-width: 768px) {
+  #root {
+    padding: 0.5rem;
+  }
+  
+  .page-title {
+    font-size: 2em;
+  }
+  
+  .section-title {
+    font-size: 1.5em;
+  }
+  
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .refresh-button {
+    align-self: flex-end;
+    padding: 0.6rem 1.2rem;
+  }
+  
+  table {
+    font-size: 0.8em;
+  }
+  
+  th, td {
+    padding: 0.75rem;
+  }
+  
+  .data-section {
+    padding: 1rem;
+  }
+  
+  /* 移动端列宽调整 */
+  .transfers-table th:nth-child(1),
+  .transfers-table td:nth-child(1),
+  .transfers-table th:nth-child(2),
+  .transfers-table td:nth-child(2) {
+    width: 12%;
+  }
+  
+  .transfers-table th:nth-child(3),
+  .transfers-table td:nth-child(3) {
+    width: 18%;
+  }
+  
+  .transfers-table th:nth-child(4),
+  .transfers-table td:nth-child(4) {
+    width: 25%;
+  }
+  
+  .transfers-table th:nth-child(5),
+  .transfers-table td:nth-child(5) {
+    width: 23%;
+  }
+  
+  .transfers-table th:nth-child(6),
+  .transfers-table td:nth-child(6) {
+    width: 10%;
+  }
+  
+  .deposits-table th:nth-child(1),
+  .deposits-table td:nth-child(1) {
+    width: 18%;
+  }
+  
+  .deposits-table th:nth-child(3),
+  .deposits-table td:nth-child(3),
+  .deposits-table th:nth-child(4),
+  .deposits-table td:nth-child(4) {
+    width: 28%;
+  }
+}
+
+@media (max-width: 480px) {
+  #root {
+    padding: 0.25rem;
+  }
+  
+  .app-container {
+    gap: 1.5rem;
+  }
+  
+  .section-header {
+    gap: 0.75rem;
+  }
+  
+  .refresh-button {
+    padding: 0.5rem 1rem;
+    font-size: 0.85em;
+  }
+  
+  .table-container {
+    font-size: 0.7em;
+    overflow-x: auto;
+  }
+  
+  th, td {
+    padding: 0.5rem;
+    min-width: 0; /* 允许收缩 */
+  }
+  
+  .address {
+    font-size: 0.8em;
+  }
+  
+  /* 超小屏幕简化显示 */
+  .transfers-table th:nth-child(5),
+  .transfers-table td:nth-child(5),
+  .deposits-table th:nth-child(4),
+  .deposits-table td:nth-child(4) {
+    width: 30%;
+  }
 }
