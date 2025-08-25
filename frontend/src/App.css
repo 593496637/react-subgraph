@@ -1,0 +1,72 @@
+/* 全局和根元素样式 */
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #1a1a1a;
+  color: rgba(255, 255, 255, 0.87);
+}
+
+/* 标题样式 */
+h1 {
+  font-size: 2.5em;
+  line-height: 1.1;
+  margin-bottom: 2rem;
+}
+
+/* 表格样式 */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+}
+
+/* 表头样式 */
+thead tr {
+  background-color: #009879;
+  color: #ffffff;
+  text-align: left;
+}
+
+/* 表格单元格和表头单元格样式 */
+th, td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #444;
+}
+
+/* 表格主体行样式 */
+tbody tr {
+  border-bottom: 1px solid #dddddd;
+}
+
+/* 斑马条纹（奇数行）样式 */
+tbody tr:nth-of-type(even) {
+  background-color: #2f2f2f;
+}
+
+/* 鼠标悬浮在行上时的样式 */
+tbody tr:hover {
+  background-color: #3a3a3a;
+  cursor: pointer;
+}
+
+/* 链接样式 */
+a {
+  color: #00bfff;
+  text-decoration: none;
+  transition: color 0.2s ease-in-out;
+}
+
+a:hover {
+  color: #009acd;
+  text-decoration: underline;
+}
