@@ -14,7 +14,7 @@ interface Transfer {
   amount: string;              // 转账金额，The Graph返回BigInt作为字符串
   blockTimestamp: string;      // 区块时间戳
   transactionHash: string;     // 交易哈希
-  inputData: string;           // 交易附言数据
+  message: string;             // 交易附言数据
 }
 
 /**
@@ -110,8 +110,8 @@ export const TransferList = () => {
               </td>
               {/* 交易附言 - 解析十六进制为可读文本 */}
               <td>
-                <span className="message" title={transfer.inputData}>
-                  {parseHexMessage(transfer.inputData)}
+                <span className="message" title={transfer.message}>
+                  {parseHexMessage(transfer.message)}
                 </span>
               </td>
               {/* Etherscan链接 - 查看完整交易详情 */}

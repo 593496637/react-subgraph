@@ -54,8 +54,8 @@ export function handleTransfer(event: TransferEvent): void {
   entity.blockTimestamp = event.block.timestamp
   entity.transactionHash = event.transaction.hash
   
-  // 保存交易输入数据，用于分析交易类型
-  entity.inputData = event.transaction.input
+  // 保存交易附言数据，用于显示用户自定义消息
+  entity.message = event.transaction.input
 
   // 保存实体到The Graph存储
   entity.save()

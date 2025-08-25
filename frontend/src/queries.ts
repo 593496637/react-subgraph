@@ -17,7 +17,7 @@ export const GET_TRANSFERS = gql`
       blockNumber           # 区块号
       blockTimestamp        # 区块时间戳
       transactionHash       # 交易哈希
-      inputData            # 交易附言数据
+      message              # 交易附言数据
     }
   }
 `;
@@ -37,7 +37,7 @@ export const GET_DEPOSITS = gql`
       amount                # 存入的ETH数量 (单位: wei)
       blockTimestamp        # 区块时间戳
       transactionHash       # 交易哈希
-      inputData            # 交易附言数据
+      message              # 交易附言数据
     }
   }
 `;
